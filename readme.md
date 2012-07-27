@@ -3,10 +3,11 @@
 This was hacked together on a friday night for use in our office. Again this was hacked together quickly to get people in the office "gorilla status" and see who could come up with the most clever response. It seems to be pretty solid. We use it alot and there havent been any noticable bugs. 
 
 ## Installation
+```
 clone
 npm install
 node app.js
-
+```
 
 ##It is a turntable bot server which has the following features:
 
