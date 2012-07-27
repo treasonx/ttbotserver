@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Bot Server</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<!-- Le styles -->
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<style type="text/css">
+		body {
+			padding-top: 60px;
+			padding-bottom: 40px;
+		}
+	</style>
+	<link href="css/bootstrap-responsive.css" rel="stylesheet">	
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/jquery-ui.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/underscore.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/knockout.js" type="text/javascript" charset="utf-8"></script>
+	<script src="/nowjs/now.js"></script>
+	<script src="js/ace/ace.js"  type="text/javascript" charset="utf-8"></script>
+	<script src="js/ace/mode-javascript.js"  type="text/javascript" charset="utf-8"></script>
+	<script src="js/ace/theme-twilight.js"  type="text/javascript" charset="utf-8"></script>
+	<script src="js/client.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css" media="screen">
+		.indicator {
+			display:inline-block;
+			width: 18px;
+			height: 18px;;
+			border-radius:25px;
+			background-color: red;"
+		}
+		.active {
+			background-color: green;
+		}
+		html, body {
+			background: white url(img/bg.png) no-repeat 50% bottom fixed;
+		}
+
+		#log div {
+			border-bottom: 1px dotted black;
+			width: 98%;
+			margin: 7px auto;
+			padding-bottom: 3px;
+		}
+		
+		#templateInput {
+			width: 85%;
+			height: 300px;
+		}
+
+
+	</style>
+</head
+<body>
+	<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Turntable Swoop-O-Matic</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>	
+	
+<div class="container">
+
+	<div data-bind="visible: !bot.isActive()" style="display:none;" class="row">
+		
+
+		<div class="span3">
+			&nbsp;
+		</div>
+
+		<div class="span6">
+		<h2>Setup Bot Details</h2>
+		<form data-bind="submit: bot.create.bind(bot)">
+			<label for="Auth">Auth</label>
+			<input style="width:100%;" placeholder="auth+live+xxxxxxxxxxxxxxxxxxxxxx"type="text" name="Auth" id="Auth" data-bind="value: bot.auth"><br>
+			<label for="UserId">UserId</label>
+			<input style="width:100%;" placeholder="GUID eg (4f26dd66a3f75176c0008c50)"  type="text" name="UserId" id="UserId" data-bind="value: bot.userid"><br>
+			<input type="submit" class="btn" value="Create">
+		</form>
+		<br>
+		<h3>Instructions</h3>
+		<div>
+			<p>The auth and userid can be found by visiting turntable signed in as your bot using chrome. Install this bookmarklet <a target="_blank" href="http://alaingilbert.github.com/Turntable-API/bookmarklet.html">bookmarklet</a>. Once you are in the room you are interested in run the bookmarklet. It will give you auth, userid, and roomid. You can change your room on the next page. The browser will remember these setting for you when returning to this page. Once your bot is configured there is no need to keep this page open. The bot will continue to function as configured. If you need to change settings you can return to this page to adjust your settings.</p>
+		</div>
+		</div>
+
+
+		<div class="span3">
+			&nbsp;
+		</div>
+
+	</div>
+
+	<div data-bind="visible: bot.isActive()" style="display:none;" class="row">
+
+		<div class="row">
+			<div class="span12">
+				
+		<h3>Controlling Your Bot</h3>
+		<div>
+			<p>I have tried to expose as much functionality as possible in a generic way. The bot server framework is easy to extend using handlers which can be configured by end users. There are two handlers types Speech Handlers and Song Handlers. If you have more than one handler active they will be excuted in any random order when the event happens. If you are interested in writing a new handler let me know its pretty simple.</p>
+			<strong>Speech Handlers:</strong>
+			<p>These handlers are triggered when someone says something in the room. They are not triggered when other bots speak to prevent loops. There are a few parameters which you can configure.</p> 
+			<p>Match Ptrn: This is a regex used to match against the text to see if the handler should be triggered. This is validated client side before submitting to the bot.</p>
+			<p>Random: Specifies how often the response should be triggered. The larger the number the less often the handler will be triggered.</p>
+			<p>Min: The minimum time that must pass before the bot replies. </p>
+			<p>Max: The maximum amount of time the bot will wait to reply. The response will trigger at some random time between min and max.</p> 
+			<p>Template: See bottom of page for template Development.</p>
+			<strong>Song Handlers</strong>
+			<p>These handlers are triggered when a new song is played. They share parameters types with the speech handlers. Except random has no meaning right now for song handlers.</p> 
+		</div>
+			</div>
+			
+		</div>
+
+
+		<div class="row">
+			<div class="span6">
+				
+		<h1>Your Bot is active</h1>
+		<form data-bind="submit: bot.changeRoom.bind(bot)">
+			<label for="RoomId">RoomId</label>
+			<input placeholder="GUID eg (4f26dd66a3f75176c0008c50)"  type="text" name="RoomId" data-bind="value: bot.room" id="RoomId">
+			<input type="submit" value="Go" class="btn">
+		</form>
+
+		<h3>Manual Actions</h3>
+
+		<form data-bind="submit: bot.say.bind(bot)">
+			<label for="Say">Say</label><input type="text" name="Say" value="" id="Say">
+			<input type="submit" class="btn" value="say">
+		</form>
+
+		<div class="btn-group">
+			<input type="button" class='btn' value="Start DJ" data-bind="click: bot.startDj.bind(bot)">
+			<input type="button" class='btn' value="Stop DJ" data-bind="click: bot.stopDj.bind(bot)">
+			<input type="button" class='btn' value="Awesome" data-bind="click: bot.upVote.bind(bot)">
+			<input type="button" class='btn' value="Lame" data-bind="click: bot.downVote.bind(bot)">
+			<input type="button" class='btn' value="Skip" data-bind="click: bot.skip.bind(bot)">
+			<input type="button" class='btn btn-danger' value="Kill Bot" data-bind="click: bot.destroy.bind(bot)">
+		</div>
+		<br>
+		<br>
+		<br>
+
+
+		<h3>Speech Handlers</h3>
+		<ul data-bind="foreach: handlers">
+			<li>
+				<strong>Name: </strong><br><span data-bind="text: name()"></span><br>
+				<strong>Description: </strong><br><span data-bind="text: desc()"></span><br>
+				<strong>Match Ptrn: </strong><input type="text" data-bind="value: match"><br>
+				<strong>Random: </strong><br><input min="3" max="50" step="5" type="range" data-bind="value: random" />
+				<input style="width:40px;" type="number"  data-bind="value: random"><br>
+				<strong>Min: </strong><br><input type="range" min="1" max="100" data-bind="value: min" />
+				<input style="width:40px;" type="number"  data-bind="value: min"> seconds<br>
+				<strong>Max: </strong><br><input type="range" min="1" max="300" data-bind="value: max" />
+				<input style="width:40px;" type="number"  data-bind="value: max"> seconds<br>
+				<strong>Template: </strong><br><input style="width:300px;"type="text" data-bind="value: tmpl" /><br>
+				<button data-bind="text: isActive() ? 'Deactivate': 'Activate', click: action.bind($data)"></button><div class="alert alert-error" data-bind="visible: error(), text: error()">ERROR</div>
+				<div class="indicator" data-bind="css: {active: isActive()}"><div>
+			</li>
+		</ul>
+
+		<h3>Song Handlers</h3>
+
+		<ul data-bind="foreach: songHandlers">
+			<li>
+				<strong>Name: </strong><br><span data-bind="text: name()"></span><br>
+				<strong>Description: </strong><br><span data-bind="text: desc()"></span><br>
+				<strong>Min: </strong><br><input type="range" min="1" max="100" data-bind="value: min" />
+				<input style="width:40px;" type="number"  data-bind="value: min"> seconds<br>
+				<strong>Max: </strong><br><input type="range" min="1" max="300" data-bind="value: max" />
+				<input style="width:40px;" type="number"  data-bind="value: max"> seconds<br>
+				<strong>Template: </strong><br><input type="text" style="width:300px;"  data-bind="value: tmpl" /><br>
+				<button data-bind="text: isActive() ? 'Deactivate': 'Activate', click: action.bind($data)"></button>
+				<div class="alert alert-error" data-bind="visible: error(), text: error()">ERROR</div>
+
+				<div class="indicator" data-bind="css: {active: isActive()}"><div>
+			</li>
+		</ul>
+			</div>
+
+
+
+			<div class="span6" >
+				<h1>Other Active Bots</h1>
+				<div data-bind="foreach: botInfos">
+					<h3 data-bind="text: name"></h3>	
+					<strong>Registration Word: </strong><span  data-bind="text: word"></span>
+					<h4>Registered Users</h4>
+					<ul data-bind="foreach: users">
+						<li data-bind="text: $data"></li>
+					</ul>
+				</div>
+				<hr>
+			</div>
+			
+		</div>
+
+
+
+		<fieldset id="Template Development">
+			<legend>Template Development</legend>
+
+			<p>Templates give you a lot of flexibility when formatting the reply. This is an <a href="http://documentcloud.github.com/underscore/#template">underscore template</a>. If you open the JavaScript console you can inspect the context that is passed to the template. When an event is fired on the bot the bot will log the text response and the context object that would be passed to the template. You can reference nested attributes using dot notation. eg room.metadata.current_song.metadata.song. If the template fails to compile you will see an error message in the bot log along with error details object in the JavaScript Console. If the template returns an empty string nothing will be said.</p>
+			<p>Templates can contain JavaScript code which can be used to format random replies or choose different replies based on the current context</p>
+			<p>Development area for templates. When you run the template it will be applied with the latest context object. The context object may not be complete until the bot has seen at least one instance of each event type. (typically with a handful of people this should be in about 1 - 2 minutes or one song rotation) </p>	
+			<br>
+			<br>
+			<div id="templateInput">
+				
+			</div>
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<br style="clear:both;">
+			<textarea id="code" style="display:none;" name="Name">Hello I am <%= bot_info.name %> <% 
+	(function randomThing() { 
+		var sayings = ['I Love Being a Bot!', 'I Love the beats', 'yawn! dude where is the drop!'], 
+			rdmIdx = Math.ceil(Math.random()*sayings.length); 
+		print(sayings[rdmIdx-1]); 
+	}())
+%> <%= song.room.metadata.current_song.metadata.song%> is hawt!</textarea>
+			<button data-bind="click: testTemplate"  class="btn">Run</button>
+
+			<h4>Output</h4>
+			<div id="errorOutput" data-bind="text: output"  style="width:100%;height:100px;overflow:auto;background-color:#ececec;border:1px solid black;"></div>
+		</fieldset>
+
+		<h3>Log:</h3><br>
+		<div id="log" data-bind="logRenderer: log"  style="background-color:white;height:300px;width:100%;overflow:auto;border: 1px solid black;">
+			
+		</div>
+	</div>
+ <hr>
+
+      <footer>
+        <p>&copy; James 2012</p>
+      </footer>
+</div>
+</body>
+</html>
